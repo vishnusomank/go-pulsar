@@ -1,0 +1,7 @@
+kmux:
+  sink:
+    stream: pulsar
+
+pulsar:
+  servers:
+    - "pulsar-proxy.accuknox-dev-pulsar.svc.cluster.local:6650"

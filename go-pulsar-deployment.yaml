@@ -1,0 +1,60 @@
+apiVersion: v1
+data:
+  kmux.yaml: |-
+    kmux:
+      sink:
+        stream: pulsar
+
+    pulsar:
+      servers:
+        - "pulsar-proxy.accuknox-dev-pulsar.svc.cluster.local:6650"
+kind: ConfigMap
+metadata:
+  name: pulsar-kmux-config
+---
+apiVersion: v1
+data:
+  app.yaml: |-
+    app:
+      topic: persistent://accuknox/discovery/summary-v1
+      msg:
+        size: 50
+        length: 1000
+kind: ConfigMap
+metadata:
+  name: pulsar-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: go-pulsar
+  name: go-pulsar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-pulsar
+  template:
+    metadata:
+      labels:
+        app: go-pulsar
+    spec:
+      containers:
+      - image: knoxuser/pulsar-test:dev
+        name: pulsar-test
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: pulsar-kmux-config
+            mountPath: /pulsar/kmux.yaml
+            subPath: kmux.yaml
+          - name: pulsar-config
+            mountPath: /pulsar/config/app.yaml
+            subPath: app.yaml
+      volumes:
+      - name: pulsar-kmux-config
+        configMap:
+          name: pulsar-kmux-config
+      - name: pulsar-config
+        configMap:
+          name: pulsar-config
